@@ -1,0 +1,9 @@
+person_id,name,risk_score,device_id,phone_id,address_id
+P001,Alice Martin,85,D001,PH001,AD001
+P002,Bob Chen,78,D001,PH001,AD001
+P003,Carol Singh,92,D002,PH002,AD002
+P004,Dave Novak,65,D003,PH003,AD003
+P005,Eve Carter,88,D004,PH004,AD004
+P006,Frank Diaz,72,D005,PH005,AD005
+P007,Grace Kim,80,D006,PH005,AD005
+P008,Hannah Lee,20,D007,PH006,AD006

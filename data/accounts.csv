@@ -1,0 +1,10 @@
+account_id,person_id,account_type,status,opened_date
+A100,P001,checking,active,2024-01-12
+A101,P001,savings,active,2024-02-05
+A200,P002,checking,active,2024-01-18
+A300,P003,checking,flagged,2024-03-01
+A400,P004,checking,active,2024-03-04
+A500,P005,checking,flagged,2024-03-07
+A600,P006,checking,active,2024-04-02
+A700,P007,checking,flagged,2024-04-03
+A800,P008,checking,active,2024-05-10
