@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SRH Bank — Online Banking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy:   #c45300;
+      --navy2:  #e06010;
+      --gold:   #fff0e6;
+      --gold2:  #ffe0cc;
+      --bg:     #fdf6f0;
+      --card:   #ffffff;
+      --text:   #2c1800;
+      --muted:  #9a7060;
+      --border: #f0d8c8;
+      --red:    #dc2626;
+      --green:  #16a34a;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ─────────────────────────────────────────────── */
+    nav {
+      background: var(--navy);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 40px;
+      gap: 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--navy);
+      letter-spacing: -1px;
+    }
+
+    .logo-name {
+      font-size: 17px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+
+    .logo-name span { color: #fff; opacity: .75; }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      margin-left: 20px;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      transition: all .15s;
+    }
+    .nav-link:hover   { color: #fff; background: rgba(255,255,255,.08); }
+    .nav-link.active  { color: #fff; background: rgba(255,255,255,.12); }
+
+    .nav-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,.1);
+      border-radius: 40px;
+      padding: 5px 14px 5px 6px;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--navy);
+    }
+
+    .user-name { font-size: 13px; font-weight: 500; color: #fff; }
+
+    /* ── Account switcher banner ─────────────────────────────── */
+    .demo-bar {
+      background: var(--navy2);
+      padding: 8px 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,.6);
+    }
+    .demo-bar strong { color: var(--gold); }
+    .account-tabs {
+      display: flex;
+      gap: 6px;
+      margin-left: 8px;
+    }
+    .account-tab {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: transparent;
+      color: rgba(255,255,255,.6);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: 'Poppins', sans-serif;
+    }
+    .account-tab:hover  { border-color: var(--gold); color: var(--gold); }
+    .account-tab.active { background: #fff; border-color: #fff; color: var(--navy); }
+
+    /* ── Main layout ────────────────────────────────────────── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 24px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── Cards ──────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 20px 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+
+    /* ── Account balance card ───────────────────────────────── */
+    .balance-card {
+      background: linear-gradient(135deg, #c45300 0%, #e8700a 100%);
+      border-radius: 16px;
+      padding: 28px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .balance-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.08);
+    }
+
+    .balance-card::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; right: 40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.05);
+    }
+
+    .balance-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,.55);
+      letter-spacing: .04em;
+      margin-bottom: 8px;
+    }
+
+    .balance-amount {
+      font-size: 36px;
+      font-weight: 500;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+
+    .balance-amount .cents {
+      font-size: 22px;
+      font-weight: 500;
+      opacity: .7;
+    }
+
+    .account-number {
+      font-size: 13px;
+      color: rgba(255,255,255,.5);
+      margin-bottom: 24px;
+      letter-spacing: .06em;
+    }
+
+    .balance-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: var(--navy);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+    .btn-primary:hover    { background: #ffe8d6; }
+    .btn-primary:active   { transform: scale(.97); }
+
+    .btn-ghost {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.2); }
+
+    /* ── Risk badge ─────────────────────────────────────────── */
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 14px;
+    }
+    .risk-badge.high   { background: rgba(220,38,38,.2);  color: #fca5a5; }
+    .risk-badge.medium { background: rgba(234,179,8,.2);  color: #fde047; }
+    .risk-badge.low    { background: rgba(22,163,74,.2);  color: #86efac; }
+    .risk-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ── Quick stats ────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      margin-top: 24px;
+    }
+
+    .stat-cell {
+      background: var(--card);
+      padding: 16px 20px;
+    }
+
+    .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+    .stat-value { font-size: 16px; font-weight: 500; }
+    .stat-value.out { color: var(--red); }
+    .stat-value.in  { color: var(--green); }
+
+    /* ── Transactions list ──────────────────────────────────── */
+    .tx-list { padding: 8px 0; }
+
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+      cursor: pointer;
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-item:hover { background: #f8f9fd; }
+
+    .tx-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-name { font-size: 14px; font-weight: 500; }
+    .tx-meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    .tx-amount {
+      font-size: 14px;
+      font-weight: 500;
+      text-align: right;
+    }
+    .tx-amount.credit { color: var(--green); }
+    .tx-amount.debit  { color: var(--text); }
+
+    .tx-date {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      text-align: right;
+    }
+
+    .flag-chip {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(220,38,38,.1);
+      color: var(--red);
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Section header ─────────────────────────────────────── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 4px;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .section-link {
+      font-size: 12px;
+      color: #c45300;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .section-link:hover { text-decoration: underline; }
+
+    /* ── Modal backdrop ─────────────────────────────────────── */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,33,68,.55);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .backdrop.open { opacity: 1; pointer-events: all; }
+
+    /* ── Send Money modal ───────────────────────────────────── */
+    .modal {
+      background: #fff;
+      border-radius: 20px;
+      width: 440px;
+      overflow: hidden;
+      transform: translateY(16px) scale(.97);
+      transition: transform .22s ease;
+      box-shadow: 0 20px 60px rgba(15,33,68,.3);
+    }
+    .backdrop.open .modal { transform: translateY(0) scale(1); }
+
+    .modal-header {
+      background: #c45300;
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { font-size: 16px; font-weight: 500; color: #fff; }
+    .modal-close {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.5);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      font-weight: 300;
+      font-family: 'Poppins', sans-serif;
+    }
+    .modal-close:hover { color: #fff; }
+
+    .modal-body { padding: 28px; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 7px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .15s;
+      appearance: none;
+    }
+    .form-control:focus { outline: none; border-color: #c45300; }
+
+    .amount-wrap { position: relative; }
+    .amount-prefix {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .amount-wrap .form-control { padding-left: 28px; font-size: 20px; font-weight: 500; }
+
+    .modal-footer {
+      padding: 0 28px 28px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn-cancel {
+      flex: 1;
+      padding: 13px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Poppins', sans-serif;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .btn-cancel:hover { border-color: var(--navy); color: var(--navy); }
+
+    .btn-send {
+      flex: 2;
+      padding: 13px;
+      background: #c45300;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+    .btn-send:hover  { background: #e06010; }
+    .btn-send:active { transform: scale(.97); }
+
+    /* ── Fraud alert state ──────────────────────────────────── */
+    .fraud-screen {
+      display: none;
+      padding: 32px 28px;
+      text-align: center;
+    }
+
+    .fraud-icon {
+      width: 72px;
+      height: 72px;
+      background: rgba(220,38,38,.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .fraud-x {
+      width: 34px;
+      height: 34px;
+      position: relative;
+    }
+    .fraud-x::before,
+    .fraud-x::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 4px;
+      background: var(--red);
+      border-radius: 2px;
+      top: 50%;
+      left: 0;
+    }
+    .fraud-x::before { transform: translateY(-50%) rotate(45deg); }
+    .fraud-x::after  { transform: translateY(-50%) rotate(-45deg); }
+
+    .fraud-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    .fraud-subtitle {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .fraud-body {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .fraud-ref {
+      display: inline-block;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--red);
+      font-weight: 500;
+      margin-bottom: 28px;
+      letter-spacing: .04em;
+    }
+
+    .fraud-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-investigate {
+      padding: 14px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-investigate:hover { background: #b91c1c; }
+
+    .btn-dismiss {
+      padding: 13px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Poppins', sans-serif;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .btn-dismiss:hover { border-color: var(--muted); }
+
+    /* ── Processing spinner ─────────────────────────────────── */
+    .processing-screen {
+      display: none;
+      padding: 48px 28px;
+      text-align: center;
+    }
+    .process-spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--border);
+      border-top-color: #c45300;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .process-label { font-size: 15px; font-weight: 500; color: var(--text); }
+    .process-sub   { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ────────────────────────────────────────────────── -->
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-mark">S</div>
+    <span class="logo-name">SRH<span>Bank</span></span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link active" href="#">Overview</a>
+    <a class="nav-link" href="#">Transfers</a>
+    <a class="nav-link" href="#">Cards</a>
+    <a class="nav-link" href="#">Settings</a>
+  </div>
+  <div class="nav-right">
+    <div class="user-pill">
+      <div class="avatar" id="nav-avatar">CR</div>
+      <span class="user-name" id="nav-name">Carol Rivera</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Demo account switcher ────────────────────────────────── -->
+<div class="demo-bar">
+  <strong>Demo Mode</strong> — viewing as:
+  <div class="account-tabs">
+    <button class="account-tab active" onclick="switchAccount('carol')">Carol (A300)</button>
+    <button class="account-tab" onclick="switchAccount('alice')">Alice (A100)</button>
+    <button class="account-tab" onclick="switchAccount('frank')">Frank (A600)</button>
+  </div>
+</div>
+
+<!-- ── Main ─────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Left column -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+
+    <!-- Balance card -->
+    <div class="balance-card">
+      <div class="balance-label">CURRENT BALANCE</div>
+      <div class="balance-amount" id="balance-amount">$12,450<span class="cents">.00</span></div>
+      <div class="account-number" id="account-number">SRH · CURRENT · A300</div>
+      <div class="balance-actions">
+        <button class="btn-primary" onclick="openSendModal()">Send Money</button>
+        <button class="btn-ghost">Request</button>
+      </div>
+      <div class="risk-badge high" id="risk-badge">
+        <div class="risk-dot"></div>
+        <span id="risk-label">High Risk Account</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-label">Sent this month</div>
+          <div class="stat-value out" id="stat-sent">-$4,200.00</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Received this month</div>
+          <div class="stat-value in" id="stat-received">+$6,800.00</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right column — transactions -->
+  <div class="card">
+    <div class="section-head">
+      <div class="section-title">Recent Transactions</div>
+      <a class="section-link" href="#">View all</a>
+    </div>
+    <div class="tx-list" id="tx-list">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Send Money modal ──────────────────────────────────────── -->
+<div class="backdrop" id="backdrop" onclick="handleBackdropClick(event)">
+  <div class="modal" id="modal">
+
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Send Money</div>
+      <button class="modal-close" onclick="closeModal()">x</button>
+    </div>
+
+    <!-- Send form -->
+    <div id="send-form">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">From Account</label>
+          <select class="form-control" id="from-account">
+            <!-- injected -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">To Account</label>
+          <select class="form-control" id="to-account">
+            <!-- injected -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount</label>
+          <div class="amount-wrap">
+            <span class="amount-prefix">$</span>
+            <input class="form-control" type="number" id="amount" placeholder="0.00" min="1">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Reference (optional)</label>
+          <input class="form-control" type="text" id="reference" placeholder="e.g. Rent payment">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-send" onclick="submitTransfer()">Send Money</button>
+      </div>
+    </div>
+
+    <!-- Processing -->
+    <div class="processing-screen" id="processing-screen">
+      <div class="process-spinner"></div>
+      <div class="process-label">Processing Transfer</div>
+      <div class="process-sub">Verifying transaction security</div>
+    </div>
+
+    <!-- Fraud alert -->
+    <div class="fraud-screen" id="fraud-screen">
+      <div class="fraud-icon"><div class="fraud-x"></div></div>
+      <div class="fraud-title">Transaction Declined</div>
+      <div class="fraud-subtitle" id="fraud-subtitle">Suspicious Activity Detected</div>
+      <div class="fraud-body" id="fraud-body">
+        This transfer has been blocked by our automated fraud detection system.
+        A pattern of suspicious activity has been identified on one or more of the accounts involved.
+      </div>
+      <div class="fraud-ref" id="fraud-ref">REF: FRD-2024-00391</div>
+      <div class="fraud-actions">
+        <button class="btn-investigate" onclick="openInvestigation()">
+          View Fraud Investigation
+        </button>
+        <button class="btn-dismiss" onclick="closeModal()">Back to Account</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Account data ──────────────────────────────────────────────
+const ACCOUNTS = {
+  carol: {
+    id: 'A300',
+    owner: 'Carol Rivera',
+    initials: 'CR',
+    balance: '$12,450.00',
+    riskLevel: 'high',
+    riskLabel: 'High Risk Account',
+    sent: '-$4,200.00',
+    received: '+$6,800.00',
+    transactions: [
+      { name: 'Eve Santos',       account: 'A500', type: 'Transfer In',  amount: '+$2,400.00', credit: true,  date: 'Today, 09:14',      flagged: true  },
+      { name: 'Dave Wilson',      account: 'A400', type: 'Transfer Out', amount: '-$1,800.00', credit: false, date: 'Yesterday, 16:32',  flagged: true  },
+      { name: 'Amazon',           account: 'MER',  type: 'Shopping',     amount: '-$45.99',    credit: false, date: 'Jun 26, 11:05',     flagged: false },
+      { name: 'Eve Santos',       account: 'A500', type: 'Transfer In',  amount: '+$3,100.00', credit: true,  date: 'Jun 25, 08:50',     flagged: true  },
+      { name: 'Dave Wilson',      account: 'A400', type: 'Transfer Out', amount: '-$2,400.00', credit: false, date: 'Jun 24, 14:17',     flagged: true  },
+      { name: 'SRH Bank ATM',     account: 'ATM',  type: 'Withdrawal',   amount: '-$200.00',   credit: false, date: 'Jun 23, 18:00',     flagged: false },
+    ]
+  },
+  alice: {
+    id: 'A100',
+    owner: 'Alice Martin',
+    initials: 'AM',
+    balance: '$8,320.00',
+    riskLevel: 'high',
+    riskLabel: 'High Risk Account',
+    sent: '-$1,100.00',
+    received: '+$3,400.00',
+    transactions: [
+      { name: 'Bob Chen',        account: 'A200', type: 'Transfer Out', amount: '-$500.00',   credit: false, date: 'Today, 10:02',     flagged: true  },
+      { name: 'Spotify',         account: 'MER',  type: 'Subscription', amount: '-$9.99',     credit: false, date: 'Jun 27, 00:00',    flagged: false },
+      { name: 'Bob Chen',        account: 'A200', type: 'Transfer Out', amount: '-$600.00',   credit: false, date: 'Jun 25, 13:45',    flagged: true  },
+      { name: 'Salary',          account: 'EXT',  type: 'Credit',       amount: '+$3,400.00', credit: true,  date: 'Jun 24, 08:00',    flagged: false },
+      { name: 'Netflix',         account: 'MER',  type: 'Subscription', amount: '-$15.99',    credit: false, date: 'Jun 20, 00:00',    flagged: false },
+    ]
+  },
+  frank: {
+    id: 'A600',
+    owner: 'Frank Diaz',
+    initials: 'FD',
+    balance: '$3,870.00',
+    riskLevel: 'medium',
+    riskLabel: 'Medium Risk Account',
+    sent: '-$2,800.00',
+    received: '+$4,100.00',
+    transactions: [
+      { name: 'Grace Kim',        account: 'A700', type: 'Transfer Out', amount: '-$1,500.00', credit: false, date: 'Today, 08:30',     flagged: true  },
+      { name: 'Unknown Source',   account: 'EXT',  type: 'Transfer In',  amount: '+$2,000.00', credit: true,  date: 'Jun 27, 22:11',    flagged: true  },
+      { name: 'Grace Kim',        account: 'A700', type: 'Transfer Out', amount: '-$1,300.00', credit: false, date: 'Jun 26, 11:58',    flagged: true  },
+      { name: 'Unknown Source',   account: 'EXT',  type: 'Transfer In',  amount: '+$2,100.00', credit: true,  date: 'Jun 25, 21:40',    flagged: true  },
+      { name: 'Grocery Store',    account: 'MER',  type: 'Shopping',     amount: '-$62.40',    credit: false, date: 'Jun 24, 17:22',    flagged: false },
+    ]
+  }
+};
+
+// ── Fraud trigger logic ───────────────────────────────────────
+// Combinations that trip the alert [from, to]
+const FRAUD_PAIRS = new Set([
+  'A300|A400', 'A400|A500', 'A500|A300',
+  'A300|A500', 'A400|A300', 'A500|A400',
+  'A100|A200', 'A200|A100',
+  'A600|A700', 'A700|A300', 'A700|A400',
+]);
+
+const FRAUD_REASONS = {
+  'A300|A400': { subtitle: 'Circular Transfer Pattern Detected', body: 'Funds sent from A300 to A400 are part of a known circular transfer loop between accounts A300, A400, and A500. This pattern is consistent with money laundering activity.' },
+  'A400|A500': { subtitle: 'Circular Transfer Pattern Detected', body: 'This transfer completes a circular money loop between three accounts flagged by our systems. Funds are cycling back to their origin account to obscure their source.' },
+  'A500|A300': { subtitle: 'Circular Transfer Pattern Detected', body: 'This transfer completes the full circular loop: A300 to A400 to A500 and back to A300. Our graph analysis has identified this pattern as active money laundering.' },
+  'A100|A200': { subtitle: 'Shared Identity Signal', body: 'Accounts A100 and A200 are linked to individuals sharing the same device, phone number, and home address — a strong indicator of synthetic identity fraud.' },
+  'A200|A100': { subtitle: 'Shared Identity Signal', body: 'Accounts A100 and A200 are linked to individuals sharing the same device, phone number, and home address — a strong indicator of synthetic identity fraud.' },
+  'A600|A700': { subtitle: 'Mule Network Activity', body: 'A600 and A700 are flagged as suspected money mule accounts that share contact details and route funds into a known laundering network.' },
+};
+
+const DEFAULT_FRAUD = {
+  subtitle: 'Suspicious Activity Detected',
+  body: 'One or more accounts involved in this transfer have been flagged by our automated detection system. This transaction has been blocked pending investigation.'
+};
+
+// ── All selectable accounts for the send modal ────────────────
+const ALL_ACCOUNTS = [
+  { id: 'A100', label: 'A100 — Alice Martin' },
+  { id: 'A101', label: 'A101 — Alice Martin (savings)' },
+  { id: 'A200', label: 'A200 — Bob Chen' },
+  { id: 'A300', label: 'A300 — Carol Rivera' },
+  { id: 'A400', label: 'A400 — Dave Wilson' },
+  { id: 'A500', label: 'A500 — Eve Santos' },
+  { id: 'A600', label: 'A600 — Frank Diaz' },
+  { id: 'A700', label: 'A700 — Grace Kim' },
+];
+
+// ── State ─────────────────────────────────────────────────────
+let currentAccount = 'carol';
+
+// ── Render ────────────────────────────────────────────────────
+function renderAccount() {
+  const acc = ACCOUNTS[currentAccount];
+
+  document.getElementById('nav-avatar').textContent  = acc.initials;
+  document.getElementById('nav-name').textContent    = acc.owner;
+  document.getElementById('balance-amount').innerHTML =
+    acc.balance.replace(/(\.\d+)$/, '<span class="cents">$1</span>');
+  document.getElementById('account-number').textContent = `SRH · CURRENT · ${acc.id}`;
+  document.getElementById('stat-sent').textContent     = acc.sent;
+  document.getElementById('stat-received').textContent = acc.received;
+
+  const badge = document.getElementById('risk-badge');
+  badge.className = `risk-badge ${acc.riskLevel}`;
+  document.getElementById('risk-label').textContent = acc.riskLabel;
+
+  renderTransactions(acc.transactions);
+  populateSendModal(acc.id);
+}
+
+function renderTransactions(txs) {
+  const list = document.getElementById('tx-list');
+  list.innerHTML = txs.map(tx => {
+    const initials = tx.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+    const bgColor  = tx.flagged ? '#fee2e2' : '#e0e8ff';
+    const txColor  = tx.flagged ? '#dc2626' : '#2563eb';
+    const flagHtml = tx.flagged
+      ? `<span class="flag-chip">FLAGGED</span>` : '';
+    return `
+      <div class="tx-item">
+        <div class="tx-icon" style="background:${bgColor};color:${txColor}">${initials}</div>
+        <div class="tx-info">
+          <div class="tx-name">${tx.name}${flagHtml}</div>
+          <div class="tx-meta">${tx.type}</div>
+        </div>
+        <div>
+          <div class="tx-amount ${tx.credit ? 'credit' : 'debit'}">${tx.amount}</div>
+          <div class="tx-date">${tx.date}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function populateSendModal(currentId) {
+  const fromSel = document.getElementById('from-account');
+  const toSel   = document.getElementById('to-account');
+
+  fromSel.innerHTML = ALL_ACCOUNTS
+    .filter(a => a.id === currentId)
+    .map(a => `<option value="${a.id}">${a.label}</option>`)
+    .join('');
+
+  toSel.innerHTML = ALL_ACCOUNTS
+    .filter(a => a.id !== currentId)
+    .map(a => `<option value="${a.id}">${a.label}</option>`)
+    .join('');
+}
+
+// ── Account switcher ──────────────────────────────────────────
+function switchAccount(key) {
+  currentAccount = key;
+  document.querySelectorAll('.account-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderAccount();
+}
+
+// ── Modal control ─────────────────────────────────────────────
+function openSendModal() {
+  showScreen('send-form');
+  document.getElementById('modal-title').textContent = 'Send Money';
+  document.getElementById('amount').value    = '';
+  document.getElementById('reference').value = '';
+  document.getElementById('backdrop').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('backdrop').classList.remove('open');
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('backdrop')) closeModal();
+}
+
+function showScreen(id) {
+  ['send-form', 'processing-screen', 'fraud-screen'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? (id === 'send-form' ? 'block' : 'flex') : 'none';
+  });
+  if (id === 'processing-screen') {
+    document.getElementById(id).style.display = 'flex';
+    document.getElementById(id).style.flexDirection = 'column';
+  }
+  if (id === 'fraud-screen') {
+    document.getElementById(id).style.display = 'block';
+  }
+}
+
+// ── Transfer logic ────────────────────────────────────────────
+function submitTransfer() {
+  const from   = document.getElementById('from-account').value;
+  const to     = document.getElementById('to-account').value;
+  const amount = document.getElementById('amount').value;
+
+  if (!amount || Number(amount) <= 0) {
+    document.getElementById('amount').focus();
+    return;
+  }
+
+  // Show processing
+  document.getElementById('modal-title').textContent = 'Verifying';
+  showScreen('processing-screen');
+
+  setTimeout(() => {
+    const key    = `${from}|${to}`;
+    const isFraud = FRAUD_PAIRS.has(key);
+
+    if (isFraud) {
+      triggerFraudAlert(key, from, to, amount);
+    } else {
+      // Successful transfer — just close for now
+      closeModal();
+    }
+  }, 1800);
+}
+
+function triggerFraudAlert(key, from, to, amount) {
+  const reason = FRAUD_REASONS[key] || DEFAULT_FRAUD;
+  const ref    = 'FRD-2024-' + String(Math.floor(Math.random() * 90000) + 10000);
+
+  document.getElementById('modal-title').textContent = 'Transfer Blocked';
+  document.getElementById('fraud-subtitle').textContent = reason.subtitle;
+  document.getElementById('fraud-body').textContent     = reason.body;
+  document.getElementById('fraud-ref').textContent      = `REF: ${ref}`;
+
+  showScreen('fraud-screen');
+}
+
+function openInvestigation() {
+  closeModal();
+  window.open('index.html', '_blank');
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+renderAccount();
+</script>
+</body>
+</html>

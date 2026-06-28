@@ -1,0 +1,113 @@
+{
+  "version": "1.0",
+  "name": "Fraud Detection",
+  "categories": [
+    {
+      "name": "Person",
+      "labels": ["Person"],
+      "color": "#E05C6A",
+      "size": 40,
+      "caption": "name",
+      "properties": ["person_id", "name", "risk_score"]
+    },
+    {
+      "name": "Account",
+      "labels": ["Account"],
+      "color": "#4A90D9",
+      "size": 32,
+      "caption": "account_id",
+      "properties": ["account_id", "account_type", "status", "opened_date"]
+    },
+    {
+      "name": "Transaction",
+      "labels": ["Transaction"],
+      "color": "#F5A623",
+      "size": 24,
+      "caption": "transaction_id",
+      "properties": ["transaction_id", "amount", "timestamp", "channel"]
+    },
+    {
+      "name": "Device",
+      "labels": ["Device"],
+      "color": "#7ED321",
+      "size": 24,
+      "caption": "label",
+      "properties": ["device_id", "device_type", "label"]
+    },
+    {
+      "name": "PhoneNumber",
+      "labels": ["PhoneNumber"],
+      "color": "#9B59B6",
+      "size": 24,
+      "caption": "phone_number",
+      "properties": ["phone_id", "phone_number"]
+    },
+    {
+      "name": "Address",
+      "labels": ["Address"],
+      "color": "#1ABC9C",
+      "size": 24,
+      "caption": "street",
+      "properties": ["address_id", "street", "city", "country"]
+    },
+    {
+      "name": "Merchant",
+      "labels": ["Merchant"],
+      "color": "#E67E22",
+      "size": 28,
+      "caption": "name",
+      "properties": ["merchant_id", "name", "category"]
+    }
+  ],
+  "relTypes": [
+    { "name": "OWNS",        "color": "#4A90D9", "width": 2 },
+    { "name": "SENT",        "color": "#F5A623", "width": 2 },
+    { "name": "TO",          "color": "#F5A623", "width": 2 },
+    { "name": "USES_DEVICE", "color": "#7ED321", "width": 1 },
+    { "name": "HAS_PHONE",   "color": "#9B59B6", "width": 1 },
+    { "name": "LIVES_AT",    "color": "#1ABC9C", "width": 1 },
+    { "name": "PAID",        "color": "#E67E22", "width": 1 }
+  ],
+  "searchPhrases": [
+    {
+      "phrase": "Show the full fraud network",
+      "cypher": "MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 100"
+    },
+    {
+      "phrase": "Find people sharing a device",
+      "cypher": "MATCH (p1:Person)-[:USES_DEVICE]->(d:Device)<-[:USES_DEVICE]-(p2:Person) WHERE p1.person_id < p2.person_id RETURN p1, d, p2"
+    },
+    {
+      "phrase": "Find people sharing a phone number",
+      "cypher": "MATCH (p1:Person)-[:HAS_PHONE]->(ph:PhoneNumber)<-[:HAS_PHONE]-(p2:Person) WHERE p1.person_id < p2.person_id RETURN p1, ph, p2"
+    },
+    {
+      "phrase": "Find people sharing an address",
+      "cypher": "MATCH (p1:Person)-[:LIVES_AT]->(ad:Address)<-[:LIVES_AT]-(p2:Person) WHERE p1.person_id < p2.person_id RETURN p1, ad, p2"
+    },
+    {
+      "phrase": "Show circular money movement",
+      "cypher": "MATCH path = (a1:Account)-[:SENT]->(:Transaction)-[:TO]->(a2:Account)-[:SENT]->(:Transaction)-[:TO]->(a3:Account)-[:SENT]->(:Transaction)-[:TO]->(a1) WHERE a1.account_id < a2.account_id AND a1.account_id < a3.account_id RETURN path"
+    },
+    {
+      "phrase": "Show two-hop transaction chains",
+      "cypher": "MATCH path = (a1:Account)-[:SENT]->(:Transaction)-[:TO]->(a2:Account)-[:SENT]->(:Transaction)-[:TO]->(a3:Account) RETURN path LIMIT 10"
+    },
+    {
+      "phrase": "Show high-risk person networks",
+      "cypher": "MATCH (p:Person) WHERE p.risk_score >= 80 MATCH path = (p)-[*1..4]-(nearby) WHERE nearby:Account OR nearby:Person RETURN path LIMIT 25"
+    },
+    {
+      "phrase": "Shortest path from A300 to A700",
+      "cypher": "MATCH (start:Account {account_id: 'A300'}), (end:Account {account_id: 'A700'}) MATCH path = shortestPath((start)-[*..8]-(end)) RETURN path"
+    },
+    {
+      "phrase": "Show flagged accounts and owners",
+      "cypher": "MATCH (p:Person)-[:OWNS]->(a:Account) WHERE a.status = 'flagged' OR p.risk_score >= 75 RETURN p, a"
+    },
+    {
+      "phrase": "Show all merchant payments",
+      "cypher": "MATCH (a:Account)-[r:PAID]->(m:Merchant) RETURN a, r, m"
+    }
+  ]
+}
