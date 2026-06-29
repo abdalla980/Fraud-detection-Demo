@@ -1,37 +1,15 @@
 # Fraud Detection with Neo4j
 
 A self-contained demo for teaching graph databases through a fraud detection scenario.
-The core question the dataset is built around:
 
 > Which accounts look suspicious, and how are they connected?
 
 ---
 
-## Project Structure
-
-```text
-.
-├── docker-compose.yml        Neo4j database (Docker)
-├── data/                     CSV source files
-├── cypher/                   Cypher scripts (load + query)
-├── frontend/
-│   ├── bank.html             SRH Bank demo — triggers fraud alerts
-│   ├── index.html            Graph visualization (Cytoscape.js)
-│   ├── server.js             Node.js static file server
-│   └── package.json
-├── bloom/                    Bloom perspective (requires Neo4j Desktop)
-├── sql-comparison/           SQL vs Cypher comparison
-├── scripts/                  Python data generator + benchmark
-└── tutorial/                 Student handout + troubleshooting guide
-```
-
----
-
 ## Requirements
 
-- Docker Desktop
+- Docker Desktop (running)
 - Node.js 18+
-- Git
 
 ---
 
@@ -62,55 +40,43 @@ npm start
 
 ---
 
-## Demo Flow
+## Demo
 
 Open two browser tabs:
 
-| Tab | URL | Purpose |
-|-----|-----|---------|
-| Bank portal | http://localhost:8080/bank.html | Show the fraud alert firing |
-| Graph view  | http://localhost:8080           | Explain why it was caught   |
-
-**Script:**
+| Tab | URL |
+|-----|-----|
+| Bank portal | http://localhost:8080/bank.html |
+| Graph view  | http://localhost:8080 |
 
 1. Open the bank portal as **Carol (A300)**
-2. Click **Send Money** — send any amount to `A400 Dave Wilson`
-3. After 1.8s the transaction is declined with a fraud alert
-4. Click **View Fraud Investigation** — the graph opens with the money laundering ring highlighted
-5. Walk through the Cypher query live
+2. Click **Send Money** → send any amount to `A400 Dave Wilson`
+3. Transaction is declined with a fraud alert after ~2s
+4. Click **View Fraud Investigation** to see the money laundering ring in the graph
 
-The bank portal has three demo accounts selectable from the top bar:
+**Other demo accounts:**
 
-| Account | Fraud scenario triggered |
-|---------|--------------------------|
-| Carol (A300) | Circular transfer alert when sending to A400 or A500 |
-| Alice (A100) | Shared identity alert when sending to A200 (Bob) |
-| Frank (A600) | Mule network alert when sending to A700 (Grace) |
+| Account | Scenario |
+|---------|----------|
+| Alice (A100) | Shared identity alert when sending to A200 |
+| Frank (A600) | Mule network alert when sending to A700 |
+
+---
+
+## Neo4j Browser
+
+`http://localhost:7474` — credentials: `neo4j` / `password123`
 
 ---
 
 ## Data Model
 
-**Node labels**
+**Nodes:** Person · Account · Transaction · Device · PhoneNumber · Address · Merchant
 
-| Label | Key property | Color in graph |
-|-------|-------------|----------------|
-| Person | name, risk_score | Bright red |
-| Account | account_id, status | Cobalt blue |
-| Transaction | transaction_id, amount | Amber gold |
-| Device | device_type, label | Emerald green |
-| PhoneNumber | phone_number | Vivid purple |
-| Address | street, city | Cyan |
-| Merchant | name, category | Orange |
-
-Person node size in the graph scales with `risk_score`.
-
-**Relationships**
-
+**Relationships:**
 ```
 (:Person)-[:OWNS]->(:Account)
-(:Account)-[:SENT]->(:Transaction)
-(:Transaction)-[:TO]->(:Account)
+(:Account)-[:SENT]->(:Transaction)-[:TO]->(:Account)
 (:Person)-[:USES_DEVICE]->(:Device)
 (:Person)-[:HAS_PHONE]->(:PhoneNumber)
 (:Person)-[:LIVES_AT]->(:Address)
@@ -119,40 +85,34 @@ Person node size in the graph scales with `risk_score`.
 
 ---
 
-## Fraud Scenarios in the Sample Data
+## Fraud Scenarios
 
-**1. Account Takeover — Alice & Bob**
-Alice and Bob share the same device, phone number, and home address.
-One identity is synthetic. A single graph traversal from the shared device surfaces both accounts instantly.
+**Account Takeover — Alice & Bob**
+Alice and Bob share the same device, phone number, and address. A single graph traversal surfaces both accounts.
 
-**2. Money Laundering — Carol, Dave, Eve**
-Funds cycle: A300 → A400 → A500 → A300.
-This circular transfer loop is the layering stage of money laundering.
-Neo4j finds the 3-cycle in one Cypher clause; SQL needs three self-joins.
+**Money Laundering — Carol, Dave, Eve**
+Funds cycle: A300 → A400 → A500 → A300. Neo4j finds this 3-cycle in one Cypher clause; SQL needs three self-joins.
 
-**3. Mule Network — Frank & Grace**
-Frank and Grace share contact details and route funds into Carol's network.
-Graph analysis connects the mule accounts to the laundering ring even when the mules have no direct relationship.
+**Mule Network — Frank & Grace**
+Frank and Grace share contact details and route funds into Carol's network. Graph analysis connects the mule accounts to the laundering ring with no direct relationship between them.
 
 ---
 
-## Useful Cypher Queries
+## Key Cypher Queries
 
-**Show the whole graph**
+**Full graph**
 ```cypher
-MATCH (n)-[r]->(m)
-RETURN n, r, m
-LIMIT 100;
+MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 100;
 ```
 
-**Find people sharing a device**
+**People sharing a device**
 ```cypher
 MATCH (p1:Person)-[:USES_DEVICE]->(d:Device)<-[:USES_DEVICE]-(p2:Person)
 WHERE p1.person_id < p2.person_id
-RETURN p1.name AS person1, p2.name AS person2, d.device_id AS shared_device;
+RETURN p1.name, p2.name, d.device_id;
 ```
 
-**Find circular money movement**
+**Circular money movement**
 ```cypher
 MATCH path = (a1:Account)-[:SENT]->(:Transaction)-[:TO]->(a2:Account)
              -[:SENT]->(:Transaction)-[:TO]->(a3:Account)
@@ -162,43 +122,18 @@ RETURN path;
 
 **Shortest path between two accounts**
 ```cypher
-MATCH (start:Account {account_id: "A300"}), (end:Account {account_id: "A700"})
-MATCH path = shortestPath((start)-[*..8]-(end))
+MATCH (s:Account {account_id: "A300"}), (e:Account {account_id: "A700"})
+MATCH path = shortestPath((s)-[*..8]-(e))
 RETURN path;
 ```
 
 ---
 
-## Resetting the Database
+## Reset
 
 ```cypher
 MATCH (n) DETACH DELETE n;
 ```
 
-Then rerun the load commands from step 2 above.
+Then rerun the load commands from step 2.
 
----
-
-## Neo4j Browser
-
-Available at http://localhost:7474 while the container is running.
-Credentials: `neo4j` / `password123`
-
----
-
-## Neo4j Bloom (optional)
-
-Bloom requires Enterprise Edition as a server plugin. To use it free, install Neo4j Desktop and connect it to the running container.
-
-1. Download Neo4j Desktop — https://neo4j.com/download/
-2. Add → Connect to Remote Instance
-3. URL: `neo4j://localhost:7687` · Username: `neo4j` · Password: `password123`
-4. Open → Neo4j Bloom
-5. Import perspective: `bloom/fraud-detection-perspective.json`
-
----
-
-## Teaching Takeaway
-
-Graph databases are not better for everything.
-They are better when **relationships are the main thing you need to query**.
