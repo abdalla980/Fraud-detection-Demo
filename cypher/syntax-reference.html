@@ -73,8 +73,9 @@
   <b>Before anything else — the two kinds of "names" you'll see everywhere below:</b>
   <ul>
     <li><b>Nicknames</b> like <code>p</code> or <code>a</code> right after <code>MATCH</code> — think of it like putting a name tag on whatever you just found, so you can point at it again later in the same query. That's it. Nothing fancier.</li>
-    <li><b><code>AS something</code></b> after <code>RETURN</code> — this just renames the column heading in your results table, like retitling a spreadsheet column so it reads nicely. It does nothing else. Delete it and the query still works, the column just shows an uglier default name.</li>
+    <li><b><code>AS something</code></b> after <code>RETURN</code> — this just renames the column heading in your results table, like retitling a spreadsheet column so it reads nicely. It does nothing else. Delete it and the query still works, the column just shows the raw expression (e.g. <code>p.name</code>) as its header instead.</li>
   </ul>
+  <p style="margin-top:10px; margin-bottom:0;">The patterns below skip <code>AS</code> entirely, since it's optional. One exception: a few queries sort by a value that's computed (a <code>sum()</code> or the same property again) — there, <code>ORDER BY</code> repeats that expression instead of pointing at a shorthand alias, because without <code>AS</code> there's no alias to point at.</p>
 </div>
 
 <div class="note">
@@ -85,10 +86,10 @@
   <span class="num">1</span>
   <h2>List everything</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score;</pre>
+<span class="kw">RETURN</span> p.name, p.risk_score;</pre>
   <ul>
     <li><code>MATCH (p:Person)</code> — find every node labeled <code>Person</code>, call it <code>p</code>.</li>
-    <li><code>RETURN x AS y</code> — pick which properties to show, and rename the column.</li>
+    <li><code>RETURN x, y</code> — pick which properties to show. No <code>AS</code> needed; the column header just defaults to the raw expression.</li>
   </ul>
   <div class="result"><b>Result:</b> 8 rows — Alice 85, Bob 78, Carol 92, Dave 65, Eve 88, Frank 72, Grace 80, Hannah 20.</div>
 </div>
@@ -97,7 +98,7 @@
   <span class="num">2</span>
   <h2>Sort it</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score
+<span class="kw">RETURN</span> p.name, p.risk_score
 <span class="kw">ORDER BY</span> p.risk_score <span class="kw">ASC</span>;</pre>
   <ul>
     <li><code>ORDER BY</code> goes after <code>RETURN</code>, sorts the rows.</li>
@@ -111,7 +112,7 @@
   <h2>Filter by a condition</h2>
   <pre><span class="kw">MATCH</span> (t:<span class="lbl">Transaction</span>)
 <span class="kw">WHERE</span> t.amount &gt; 500
-<span class="kw">RETURN</span> t.transaction_id <span class="kw">AS</span> transaction, t.amount <span class="kw">AS</span> amount;</pre>
+<span class="kw">RETURN</span> t.transaction_id, t.amount;</pre>
   <ul>
     <li><code>WHERE</code> comes after the <code>MATCH</code> it filters, before <code>RETURN</code>.</li>
     <li>Operators: <code>&gt; &lt; &gt;= &lt;= = &lt;&gt;</code> (<code>&lt;&gt;</code> = "not equal").</li>
@@ -123,7 +124,7 @@
   <span class="num">4</span>
   <h2>Count everything (one total number)</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
-<span class="kw">RETURN</span> count(p) <span class="kw">AS</span> total_people;</pre>
+<span class="kw">RETURN</span> count(p);</pre>
   <ul>
     <li><code>count(p)</code> is an aggregating function — it collapses all matched rows into one.</li>
     <li>Because nothing else un-aggregated is in <code>RETURN</code>, you get a single row back, not one per person.</li>
@@ -135,7 +136,7 @@
   <span class="num">5</span>
   <h2>Look up one specific thing's connections</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span> {name: <span class="str">"Alice Martin"</span>})-[:<span class="rel">OWNS</span>]-&gt;(a:<span class="lbl">Account</span>)
-<span class="kw">RETURN</span> a.account_id <span class="kw">AS</span> account;</pre>
+<span class="kw">RETURN</span> a.account_id;</pre>
   <ul>
     <li><code>{name: "..."}</code> — inline filter, only match the node with this exact property value.</li>
     <li><code>-[:OWNS]-&gt;</code> — follow only relationships of type <code>OWNS</code>, in the direction the arrow points.</li>
@@ -147,7 +148,7 @@
   <span class="num">6</span>
   <h2>List every pair (no filter, all matches)</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)-[:<span class="rel">OWNS</span>]-&gt;(a:<span class="lbl">Account</span>)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, a.account_id <span class="kw">AS</span> account;</pre>
+<span class="kw">RETURN</span> p.name, a.account_id;</pre>
   <ul>
     <li>Same shape as #5, just drop the <code>{name: ...}</code> — now it returns one row per person-account pair that exists, not just one person's.</li>
   </ul>
@@ -158,7 +159,7 @@
   <span class="num">7</span>
   <h2>Follow a relationship backwards</h2>
   <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span> {account_id: <span class="str">"A300"</span>})&lt;-[:<span class="rel">OWNS</span>]-(p:<span class="lbl">Person</span>)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> owner;</pre>
+<span class="kw">RETURN</span> p.name;</pre>
   <ul>
     <li><code>&lt;-[:OWNS]-</code> — arrow points into the node on the left instead of out of it. Same relationship type, opposite direction of travel.</li>
     <li>Use this when you start from the "target" (the account) and want the "source" (its owner).</li>
@@ -170,7 +171,7 @@
   <span class="num">8</span>
   <h2>Count per group (implicit GROUP BY)</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)-[:<span class="rel">OWNS</span>]-&gt;(a:<span class="lbl">Account</span>)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, count(a) <span class="kw">AS</span> account_count;</pre>
+<span class="kw">RETURN</span> p.name, count(a);</pre>
   <ul>
     <li>Cypher has <b>no <code>GROUP BY</code> keyword</b>. Whatever's in <code>RETURN</code> that <i>isn't</i> wrapped in an aggregating function (here, <code>p.name</code>) automatically becomes the grouping key.</li>
     <li>One row per distinct person; <code>count(a)</code> only counts that person's accounts.</li>
@@ -183,7 +184,7 @@
   <h2>Filter on a relationship's own property</h2>
   <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span>)-[paid:<span class="rel">PAID</span>]-&gt;(m:<span class="lbl">Merchant</span>)
 <span class="kw">WHERE</span> paid.amount &gt; 100
-<span class="kw">RETURN</span> a.account_id <span class="kw">AS</span> account, m.name <span class="kw">AS</span> merchant, paid.amount <span class="kw">AS</span> amount;</pre>
+<span class="kw">RETURN</span> a.account_id, m.name, paid.amount;</pre>
   <ul>
     <li><code>[paid:PAID]</code> — giving the relationship itself a variable name lets you read <i>its</i> properties, not just the nodes on either end.</li>
     <li>Relationships can hold data too (amount, date, channel) — not just nodes.</li>
@@ -195,11 +196,12 @@
   <span class="num">10</span>
   <h2>Only the top one</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score
-<span class="kw">ORDER BY</span> risk_score <span class="kw">DESC</span>
+<span class="kw">RETURN</span> p.name, p.risk_score
+<span class="kw">ORDER BY</span> p.risk_score <span class="kw">DESC</span>
 <span class="kw">LIMIT</span> 1;</pre>
   <ul>
     <li><code>LIMIT 1</code> keeps only the first row left after sorting — sort first, then cut.</li>
+    <li><code>ORDER BY p.risk_score</code> repeats the same expression from <code>RETURN</code> — there's no <code>AS risk_score</code> alias to sort by instead.</li>
   </ul>
   <div class="result"><b>Result:</b> Carol Singh, 92.</div>
 </div>
@@ -208,8 +210,8 @@
   <span class="num">11</span>
   <h2>Top N</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score
-<span class="kw">ORDER BY</span> risk_score <span class="kw">DESC</span>
+<span class="kw">RETURN</span> p.name, p.risk_score
+<span class="kw">ORDER BY</span> p.risk_score <span class="kw">DESC</span>
 <span class="kw">LIMIT</span> 3;</pre>
   <ul>
     <li>Same as #10, just change the number. <code>LIMIT</code> always comes last.</li>
@@ -221,10 +223,11 @@
   <span class="num">12</span>
   <h2>Total per group</h2>
   <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span>)-[:<span class="rel">SENT</span>]-&gt;(t:<span class="lbl">Transaction</span>)
-<span class="kw">RETURN</span> a.account_id <span class="kw">AS</span> account, sum(t.amount) <span class="kw">AS</span> total_sent
-<span class="kw">ORDER BY</span> total_sent <span class="kw">DESC</span>;</pre>
+<span class="kw">RETURN</span> a.account_id, sum(t.amount)
+<span class="kw">ORDER BY</span> sum(t.amount) <span class="kw">DESC</span>;</pre>
   <ul>
     <li>Exact same implicit-grouping trick as #8, just <code>sum()</code> instead of <code>count()</code>.</li>
+    <li><code>ORDER BY sum(t.amount)</code> repeats the aggregate from <code>RETURN</code> — no <code>AS total_sent</code> alias to reference instead.</li>
   </ul>
   <div class="result"><b>Result:</b> A700 (1750), A300 (1300), A400 (875), A500 (850), A600 (600), A100 (250), A200 (245.5), A800 (45), A101 (30).</div>
 </div>
@@ -233,8 +236,8 @@
   <span class="num">13</span>
   <h2>Total per group, using a relationship's own property</h2>
   <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span>)-[paid:<span class="rel">PAID</span>]-&gt;(m:<span class="lbl">Merchant</span>)
-<span class="kw">RETURN</span> m.name <span class="kw">AS</span> merchant, sum(paid.amount) <span class="kw">AS</span> total_paid
-<span class="kw">ORDER BY</span> total_paid <span class="kw">DESC</span>;</pre>
+<span class="kw">RETURN</span> m.name, sum(paid.amount)
+<span class="kw">ORDER BY</span> sum(paid.amount) <span class="kw">DESC</span>;</pre>
   <ul>
     <li>Combines #9 (reading a relationship's own property, <code>paid.amount</code>) with #8/#12's implicit-grouping trick — <code>m.name</code> isn't aggregated, so it's the group key, same as always.</li>
     <li>The only difference from #12: the thing being summed lives on the relationship (<code>paid.amount</code>), not on the node at the end of it (<code>t.amount</code>). Whenever the value you need to total is stored on the arrow itself rather than a node, this is the shape you reach for.</li>
@@ -264,7 +267,7 @@
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span> {person_id: <span class="str">"P999"</span>})
 <span class="kw">CREATE</span> (a:<span class="lbl">Account</span> {account_id: <span class="str">"A999"</span>, account_type: <span class="str">"checking"</span>, status: <span class="str">"active"</span>})
 <span class="kw">CREATE</span> (p)-[:<span class="rel">OWNS</span>]-&gt;(a)
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> owner, a.account_id <span class="kw">AS</span> account;</pre>
+<span class="kw">RETURN</span> p.name, a.account_id;</pre>
   <ul>
     <li>First line finds the existing person from #14 with a normal <code>MATCH</code>.</li>
     <li>Second line creates a new Account node.</li>
@@ -278,7 +281,7 @@
   <h2>Update a property</h2>
   <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span> {person_id: <span class="str">"P999"</span>})
 <span class="kw">SET</span> p.risk_score = 95
-<span class="kw">RETURN</span> p.name <span class="kw">AS</span> name, p.risk_score <span class="kw">AS</span> risk_score;</pre>
+<span class="kw">RETURN</span> p.name, p.risk_score;</pre>
   <ul>
     <li><code>MATCH</code> first to find the node you want to change — <code>SET</code> only works on something you already matched.</li>
     <li><code>SET p.risk_score = 95</code> overwrites that one property. Everything else on the node stays untouched.</li>
