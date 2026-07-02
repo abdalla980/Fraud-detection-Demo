@@ -129,6 +129,14 @@ RETURN path;
 
 ---
 
+## Cypher Reference & Favorites
+
+- `cypher/syntax-reference.html` — every query pattern used in this project (basic lookups, filtering, sorting, aggregation, and CRUD), each with a plain-English breakdown of the syntax and a verified expected result. Open it directly in a browser.
+- `cypher/favorites-fraud.csv` — the same queries, importable into Neo4j Browser's Favorites panel (star icon in the sidebar) so they're one click away instead of copy-pasted each time.
+- `cypher/favorites-fraud.cypher` — the same content as the CSV, in plain readable Cypher, if you just want to read through it or edit a query before regenerating the CSV.
+
+---
+
 ## Reset
 
 ```cypher

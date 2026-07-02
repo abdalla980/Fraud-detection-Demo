@@ -574,14 +574,14 @@ function initCy(elements) {
 }
 
 // ── Apply pattern (highlight / dim) ──────────────────────────
-async function applyPattern(p) {
+async function applyPattern(p, blockedTransfer) {
   document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`btn-${p.id}`).classList.add('active');
   document.getElementById('explanation').style.display = 'none';
 
   if (p.id === 'full') {
     cy.batch(() => cy.elements().removeClass('hl-node hl-edge dim'));
-    showExplanation(p);
+    showExplanation(p, blockedTransfer);
     return;
   }
 
@@ -597,18 +597,38 @@ async function applyPattern(p) {
       cy.edges().filter(e => rids.has(e.id())).removeClass('dim').addClass('hl-edge');
     });
 
-    showExplanation(p);
+    showExplanation(p, blockedTransfer);
   } catch (err) {
     console.error('Pattern query failed:', err);
   }
 }
 
-function showExplanation(p) {
+function showExplanation(p, blockedTransfer) {
   const box = document.getElementById('explanation');
+  const banner = blockedTransfer?.from && blockedTransfer?.to
+    ? `<div style="margin-bottom:10px;font-size:12px;color:#f85149;font-weight:700;letter-spacing:.04em">
+         BLOCKED TRANSFER: ${blockedTransfer.from} &rarr; ${blockedTransfer.to}
+       </div>`
+    : '';
   box.innerHTML = `
+    ${banner}
     <span class="exp-tag" style="background:${p.color}25;color:${p.color}">${p.tagLabel}</span>
     <div class="exp-title">${p.title}</div>
     <div class="exp-body">${p.body.map(t => `<p>${t}</p>`).join('')}</div>
+  `;
+  box.style.display = 'block';
+}
+
+// ── Intro state (calm default before any pattern is picked) ──
+function showIntro() {
+  const box = document.getElementById('explanation');
+  box.innerHTML = `
+    <span class="exp-tag" style="background:#58a6ff25;color:#58a6ff">Start Here</span>
+    <div class="exp-title">How to Read This Graph</div>
+    <div class="exp-body">
+      <p>Each shape/color is one entity type — check the legend in the sidebar (people, accounts, transactions, devices, phones, addresses, merchants).</p>
+      <p>Pick a scenario on the left to highlight just that fraud pattern and dim everything else, or zoom and drag to explore the full network freely.</p>
+    </div>
   `;
   box.style.display = 'block';
 }
@@ -697,7 +717,14 @@ async function boot() {
     dot.className = 'dot ok';
     txt.textContent = 'neo4j://localhost:7687';
 
-    applyPattern(PATTERNS[0]);
+    const params = new URLSearchParams(location.search);
+    const linkedPattern = PATTERNS.find(p => p.id === params.get('pattern'));
+
+    if (linkedPattern) {
+      applyPattern(linkedPattern, { from: params.get('from'), to: params.get('to') });
+    } else {
+      showIntro();
+    }
 
   } catch (err) {
     dot.className = 'dot error';

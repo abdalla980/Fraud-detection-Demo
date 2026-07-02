@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cypher Patterns — Reference</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+    line-height: 1.5;
+  }
+  code, pre { font-family: 'Consolas', 'JetBrains Mono', monospace; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: #8b949e; font-size: 13.5px; margin-bottom: 28px; }
+  .pattern {
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .pattern h2 { font-size: 15px; color: #58a6ff; margin-bottom: 10px; }
+  pre {
+    background: #010409;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    overflow-x: auto;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+  }
+  .kw { color: #bc8cff; }
+  .lbl { color: #3fb950; }
+  .rel { color: #d29922; }
+  .str { color: #a5d6ff; }
+  ul { margin: 0; padding-left: 18px; font-size: 13.5px; }
+  li { margin-bottom: 4px; }
+  li code { color: #d29922; }
+  .num { color: #8b949e; font-size: 12px; }
+  .result {
+    background: rgba(63,185,80,0.08);
+    border-left: 3px solid #3fb950;
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .result b { color: #3fb950; }
+  .note {
+    background: rgba(88,166,255,0.08);
+    border-left: 3px solid #58a6ff;
+    padding: 12px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13.5px;
+    margin-bottom: 24px;
+  }
+  .note b { color: #58a6ff; }
+  .note ul { margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Cypher Patterns — Things You Can Do With This Data</h1>
+<p class="sub">Your own reference. All queries run against the fraud dataset (Person, Account, Transaction, Merchant, Device). Same shapes work on any other graph — just swap the labels.</p>
+
+<div class="note">
+  <b>Before anything else — the two kinds of "names" you'll see everywhere below:</b>
+  <ul>
+    <li><b>Nicknames</b> like <code>p</code> or <code>a</code> right after <code>MATCH</code> — think of it like putting a name tag on whatever you just found, so you can point at it again later in the same query. That's it. Nothing fancier.</li>
+    <li><b><code>AS something</code></b> after <code>RETURN</code> — this just renames the column heading in your results table, like retitling a spreadsheet column so it reads nicely. It does nothing else. Delete it and the query still works, the column just shows an uglier default name.</li>
+  </ul>
+</div>
+
+<div class="note">
+  <b>Favorites file ready to import:</b> <code>cypher/favorites-fraud.csv</code> — everything below, plus a verify-count query. Setup (constraints, loading the CSVs) isn't in there — that's already done and documented in the README. Import via Neo4j Browser's Favorites panel.
+</div>
+
+<div class="pattern">
+  <span class="num">1</span>
+  <h2>List everything</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score;</pre>
+  <ul>
+    <li><code>MATCH (p:Person)</code> — find every node labeled <code>Person</code>, call it <code>p</code>.</li>
+    <li><code>RETURN x AS y</code> — pick which properties to show, and rename the column.</li>
+  </ul>
+  <div class="result"><b>Result:</b> 8 rows — Alice 85, Bob 78, Carol 92, Dave 65, Eve 88, Frank 72, Grace 80, Hannah 20.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">2</span>
+  <h2>Sort it</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score
+<span class="kw">ORDER BY</span> p.risk_score <span class="kw">ASC</span>;</pre>
+  <ul>
+    <li><code>ORDER BY</code> goes after <code>RETURN</code>, sorts the rows.</li>
+    <li>Default is <code>ASC</code> (smallest/oldest/lowest first) if you omit it — write <code>DESC</code> to flip it.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Hannah 20, Dave 65, Frank 72, Bob 78, Grace 80, Alice 85, Eve 88, Carol 92.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">3</span>
+  <h2>Filter by a condition</h2>
+  <pre><span class="kw">MATCH</span> (t:<span class="lbl">Transaction</span>)
+<span class="kw">WHERE</span> t.amount &gt; 500
+<span class="kw">RETURN</span> t.transaction_id <span class="kw">AS</span> transaction, t.amount <span class="kw">AS</span> amount;</pre>
+  <ul>
+    <li><code>WHERE</code> comes after the <code>MATCH</code> it filters, before <code>RETURN</code>.</li>
+    <li>Operators: <code>&gt; &lt; &gt;= &lt;= = &lt;&gt;</code> (<code>&lt;&gt;</code> = "not equal").</li>
+  </ul>
+  <div class="result"><b>Result:</b> 6 transactions — T003 (900), T004 (875), T005 (850), T006 (600), T007 (550), T010 (1200).</div>
+</div>
+
+<div class="pattern">
+  <span class="num">4</span>
+  <h2>Count everything (one total number)</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
+<span class="kw">RETURN</span> count(p) <span class="kw">AS</span> total_people;</pre>
+  <ul>
+    <li><code>count(p)</code> is an aggregating function — it collapses all matched rows into one.</li>
+    <li>Because nothing else un-aggregated is in <code>RETURN</code>, you get a single row back, not one per person.</li>
+  </ul>
+  <div class="result"><b>Result:</b> 8.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">5</span>
+  <h2>Look up one specific thing's connections</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span> {name: <span class="str">"Alice Martin"</span>})-[:<span class="rel">OWNS</span>]-&gt;(a:<span class="lbl">Account</span>)
+<span class="kw">RETURN</span> a.account_id <span class="kw">AS</span> account;</pre>
+  <ul>
+    <li><code>{name: "..."}</code> — inline filter, only match the node with this exact property value.</li>
+    <li><code>-[:OWNS]-&gt;</code> — follow only relationships of type <code>OWNS</code>, in the direction the arrow points.</li>
+  </ul>
+  <div class="result"><b>Result:</b> A100 and A101.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">6</span>
+  <h2>List every pair (no filter, all matches)</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)-[:<span class="rel">OWNS</span>]-&gt;(a:<span class="lbl">Account</span>)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, a.account_id <span class="kw">AS</span> account;</pre>
+  <ul>
+    <li>Same shape as #5, just drop the <code>{name: ...}</code> — now it returns one row per person-account pair that exists, not just one person's.</li>
+  </ul>
+  <div class="result"><b>Result:</b> 9 rows — Alice Martin appears twice (A100, A101), everyone else once.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">7</span>
+  <h2>Follow a relationship backwards</h2>
+  <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span> {account_id: <span class="str">"A300"</span>})&lt;-[:<span class="rel">OWNS</span>]-(p:<span class="lbl">Person</span>)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> owner;</pre>
+  <ul>
+    <li><code>&lt;-[:OWNS]-</code> — arrow points into the node on the left instead of out of it. Same relationship type, opposite direction of travel.</li>
+    <li>Use this when you start from the "target" (the account) and want the "source" (its owner).</li>
+  </ul>
+  <div class="result"><b>Result:</b> Carol Singh.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">8</span>
+  <h2>Count per group (implicit GROUP BY)</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)-[:<span class="rel">OWNS</span>]-&gt;(a:<span class="lbl">Account</span>)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, count(a) <span class="kw">AS</span> account_count;</pre>
+  <ul>
+    <li>Cypher has <b>no <code>GROUP BY</code> keyword</b>. Whatever's in <code>RETURN</code> that <i>isn't</i> wrapped in an aggregating function (here, <code>p.name</code>) automatically becomes the grouping key.</li>
+    <li>One row per distinct person; <code>count(a)</code> only counts that person's accounts.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Alice Martin → 2, everyone else → 1.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">9</span>
+  <h2>Filter on a relationship's own property</h2>
+  <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span>)-[paid:<span class="rel">PAID</span>]-&gt;(m:<span class="lbl">Merchant</span>)
+<span class="kw">WHERE</span> paid.amount &gt; 100
+<span class="kw">RETURN</span> a.account_id <span class="kw">AS</span> account, m.name <span class="kw">AS</span> merchant, paid.amount <span class="kw">AS</span> amount;</pre>
+  <ul>
+    <li><code>[paid:PAID]</code> — giving the relationship itself a variable name lets you read <i>its</i> properties, not just the nodes on either end.</li>
+    <li>Relationships can hold data too (amount, date, channel) — not just nodes.</li>
+  </ul>
+  <div class="result"><b>Result:</b> A700 → Fast Electronics ($1200), A300 → Crypto Voucher Store ($400).</div>
+</div>
+
+<div class="pattern">
+  <span class="num">10</span>
+  <h2>Only the top one</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score
+<span class="kw">ORDER BY</span> risk_score <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 1;</pre>
+  <ul>
+    <li><code>LIMIT 1</code> keeps only the first row left after sorting — sort first, then cut.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Carol Singh, 92.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">11</span>
+  <h2>Top N</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span>)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> person, p.risk_score <span class="kw">AS</span> risk_score
+<span class="kw">ORDER BY</span> risk_score <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 3;</pre>
+  <ul>
+    <li>Same as #10, just change the number. <code>LIMIT</code> always comes last.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Carol Singh (92), Eve Carter (88), Alice Martin (85).</div>
+</div>
+
+<div class="pattern">
+  <span class="num">12</span>
+  <h2>Total per group</h2>
+  <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span>)-[:<span class="rel">SENT</span>]-&gt;(t:<span class="lbl">Transaction</span>)
+<span class="kw">RETURN</span> a.account_id <span class="kw">AS</span> account, sum(t.amount) <span class="kw">AS</span> total_sent
+<span class="kw">ORDER BY</span> total_sent <span class="kw">DESC</span>;</pre>
+  <ul>
+    <li>Exact same implicit-grouping trick as #8, just <code>sum()</code> instead of <code>count()</code>.</li>
+  </ul>
+  <div class="result"><b>Result:</b> A700 (1750), A300 (1300), A400 (875), A500 (850), A600 (600), A100 (250), A200 (245.5), A800 (45), A101 (30).</div>
+</div>
+
+<div class="pattern">
+  <span class="num">13</span>
+  <h2>Total per group, using a relationship's own property</h2>
+  <pre><span class="kw">MATCH</span> (a:<span class="lbl">Account</span>)-[paid:<span class="rel">PAID</span>]-&gt;(m:<span class="lbl">Merchant</span>)
+<span class="kw">RETURN</span> m.name <span class="kw">AS</span> merchant, sum(paid.amount) <span class="kw">AS</span> total_paid
+<span class="kw">ORDER BY</span> total_paid <span class="kw">DESC</span>;</pre>
+  <ul>
+    <li>Combines #9 (reading a relationship's own property, <code>paid.amount</code>) with #8/#12's implicit-grouping trick — <code>m.name</code> isn't aggregated, so it's the group key, same as always.</li>
+    <li>The only difference from #12: the thing being summed lives on the relationship (<code>paid.amount</code>), not on the node at the end of it (<code>t.amount</code>). Whenever the value you need to total is stored on the arrow itself rather than a node, this is the shape you reach for.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Fast Electronics (1200), Crypto Voucher Store (400), Campus Cafe (65.5).</div>
+</div>
+
+<div class="note">
+  <b>CRUD — everything so far only reads. These four write.</b> Use a throwaway test node (not real data) so you can demo Create/Update/Delete without messing up the other patterns above.
+</div>
+
+<div class="pattern">
+  <span class="num">14</span>
+  <h2>Create a node</h2>
+  <pre><span class="kw">CREATE</span> (p:<span class="lbl">Person</span> {person_id: <span class="str">"P999"</span>, name: <span class="str">"Test Person"</span>, risk_score: 50})
+<span class="kw">RETURN</span> p;</pre>
+  <ul>
+    <li><code>CREATE</code> — unlike <code>MATCH</code>, this doesn't search for anything, it just makes a brand-new node with these properties, every time it runs.</li>
+    <li>Run this twice and you get two separate "Test Person" nodes — <code>CREATE</code> never checks if one already exists.</li>
+  </ul>
+  <div class="result"><b>Result:</b> a new Person node, P999 / Test Person / risk_score 50.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">15</span>
+  <h2>Create a relationship</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span> {person_id: <span class="str">"P999"</span>})
+<span class="kw">CREATE</span> (a:<span class="lbl">Account</span> {account_id: <span class="str">"A999"</span>, account_type: <span class="str">"checking"</span>, status: <span class="str">"active"</span>})
+<span class="kw">CREATE</span> (p)-[:<span class="rel">OWNS</span>]-&gt;(a)
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> owner, a.account_id <span class="kw">AS</span> account;</pre>
+  <ul>
+    <li>First line finds the existing person from #14 with a normal <code>MATCH</code>.</li>
+    <li>Second line creates a new Account node.</li>
+    <li>Third line creates the <code>OWNS</code> arrow connecting them — you can <code>CREATE</code> a relationship between any two nodes you already have in hand.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Test Person → owns → A999.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">16</span>
+  <h2>Update a property</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span> {person_id: <span class="str">"P999"</span>})
+<span class="kw">SET</span> p.risk_score = 95
+<span class="kw">RETURN</span> p.name <span class="kw">AS</span> name, p.risk_score <span class="kw">AS</span> risk_score;</pre>
+  <ul>
+    <li><code>MATCH</code> first to find the node you want to change — <code>SET</code> only works on something you already matched.</li>
+    <li><code>SET p.risk_score = 95</code> overwrites that one property. Everything else on the node stays untouched.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Test Person, risk_score now 95.</div>
+</div>
+
+<div class="pattern">
+  <span class="num">17</span>
+  <h2>Delete (cleanup)</h2>
+  <pre><span class="kw">MATCH</span> (p:<span class="lbl">Person</span> {person_id: <span class="str">"P999"</span>})
+<span class="kw">OPTIONAL MATCH</span> (p)-[:<span class="rel">OWNS</span>]-&gt;(a:<span class="lbl">Account</span> {account_id: <span class="str">"A999"</span>})
+<span class="kw">DETACH DELETE</span> p, a;</pre>
+  <ul>
+    <li><code>OPTIONAL MATCH</code> — like <code>MATCH</code> but doesn't fail the whole query if nothing matches (in case the account was already gone).</li>
+    <li><code>DETACH DELETE</code> — deletes the node <i>and</i> any relationships attached to it in one go. Plain <code>DELETE</code> on a node with relationships still attached throws an error; <code>DETACH</code> is what lets you skip finding and deleting each relationship by hand.</li>
+  </ul>
+  <div class="result"><b>Result:</b> Test Person and its account are gone — verified 0 nodes left over.</div>
+</div>
+
+</body>
+</html>

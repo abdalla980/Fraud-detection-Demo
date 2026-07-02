@@ -549,6 +549,10 @@
     .fraud-x::before { transform: translateY(-50%) rotate(45deg); }
     .fraud-x::after  { transform: translateY(-50%) rotate(-45deg); }
 
+    .fraud-icon.warn { background: rgba(217,153,34,.15); }
+    .fraud-icon.warn .fraud-x::before,
+    .fraud-icon.warn .fraud-x::after { background: #d99922; }
+
     .fraud-title {
       font-size: 20px;
       font-weight: 500;
@@ -645,9 +649,6 @@
   </a>
   <div class="nav-links">
     <a class="nav-link active" href="#">Overview</a>
-    <a class="nav-link" href="#">Transfers</a>
-    <a class="nav-link" href="#">Cards</a>
-    <a class="nav-link" href="#">Settings</a>
   </div>
   <div class="nav-right">
     <div class="user-pill">
@@ -784,6 +785,21 @@
       </div>
     </div>
 
+    <!-- Service unavailable -->
+    <div class="fraud-screen" id="service-error-screen">
+      <div class="fraud-icon warn"><div class="fraud-x"></div></div>
+      <div class="fraud-title" style="color:#d99922">Verification Unavailable</div>
+      <div class="fraud-subtitle">Could Not Reach Fraud Detection Service</div>
+      <div class="fraud-body">
+        We could not verify this transfer against the fraud detection graph right now,
+        so it was not completed. Make sure Neo4j is running (<code>docker compose up -d</code>)
+        and the frontend server can reach it, then try again.
+      </div>
+      <div class="fraud-actions">
+        <button class="btn-dismiss" onclick="closeModal()">Back to Account</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -844,29 +860,6 @@ const ACCOUNTS = {
   }
 };
 
-// ── Fraud trigger logic ───────────────────────────────────────
-// Combinations that trip the alert [from, to]
-const FRAUD_PAIRS = new Set([
-  'A300|A400', 'A400|A500', 'A500|A300',
-  'A300|A500', 'A400|A300', 'A500|A400',
-  'A100|A200', 'A200|A100',
-  'A600|A700', 'A700|A300', 'A700|A400',
-]);
-
-const FRAUD_REASONS = {
-  'A300|A400': { subtitle: 'Circular Transfer Pattern Detected', body: 'Funds sent from A300 to A400 are part of a known circular transfer loop between accounts A300, A400, and A500. This pattern is consistent with money laundering activity.' },
-  'A400|A500': { subtitle: 'Circular Transfer Pattern Detected', body: 'This transfer completes a circular money loop between three accounts flagged by our systems. Funds are cycling back to their origin account to obscure their source.' },
-  'A500|A300': { subtitle: 'Circular Transfer Pattern Detected', body: 'This transfer completes the full circular loop: A300 to A400 to A500 and back to A300. Our graph analysis has identified this pattern as active money laundering.' },
-  'A100|A200': { subtitle: 'Shared Identity Signal', body: 'Accounts A100 and A200 are linked to individuals sharing the same device, phone number, and home address — a strong indicator of synthetic identity fraud.' },
-  'A200|A100': { subtitle: 'Shared Identity Signal', body: 'Accounts A100 and A200 are linked to individuals sharing the same device, phone number, and home address — a strong indicator of synthetic identity fraud.' },
-  'A600|A700': { subtitle: 'Mule Network Activity', body: 'A600 and A700 are flagged as suspected money mule accounts that share contact details and route funds into a known laundering network.' },
-};
-
-const DEFAULT_FRAUD = {
-  subtitle: 'Suspicious Activity Detected',
-  body: 'One or more accounts involved in this transfer have been flagged by our automated detection system. This transaction has been blocked pending investigation.'
-};
-
 // ── All selectable accounts for the send modal ────────────────
 const ALL_ACCOUNTS = [
   { id: 'A100', label: 'A100 — Alice Martin' },
@@ -881,6 +874,7 @@ const ALL_ACCOUNTS = [
 
 // ── State ─────────────────────────────────────────────────────
 let currentAccount = 'carol';
+let lastTransfer    = null;
 
 // ── Render ────────────────────────────────────────────────────
 function renderAccount() {
@@ -966,20 +960,22 @@ function handleBackdropClick(e) {
 }
 
 function showScreen(id) {
-  ['send-form', 'processing-screen', 'fraud-screen'].forEach(s => {
+  ['send-form', 'processing-screen', 'fraud-screen', 'service-error-screen'].forEach(s => {
     document.getElementById(s).style.display = s === id ? (id === 'send-form' ? 'block' : 'flex') : 'none';
   });
   if (id === 'processing-screen') {
     document.getElementById(id).style.display = 'flex';
     document.getElementById(id).style.flexDirection = 'column';
   }
-  if (id === 'fraud-screen') {
+  if (id === 'fraud-screen' || id === 'service-error-screen') {
     document.getElementById(id).style.display = 'block';
   }
 }
 
 // ── Transfer logic ────────────────────────────────────────────
-function submitTransfer() {
+// The verdict comes from a real Cypher fraud check running against Neo4j
+// (see server.js -> POST /api/transfer). Nothing here decides fraud anymore.
+async function submitTransfer() {
   const from   = document.getElementById('from-account').value;
   const to     = document.getElementById('to-account').value;
   const amount = document.getElementById('amount').value;
@@ -989,30 +985,38 @@ function submitTransfer() {
     return;
   }
 
-  // Show processing
   document.getElementById('modal-title').textContent = 'Verifying';
   showScreen('processing-screen');
 
-  setTimeout(() => {
-    const key    = `${from}|${to}`;
-    const isFraud = FRAUD_PAIRS.has(key);
+  let result;
+  try {
+    const res = await fetch('/api/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to, amount }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    result = await res.json();
+  } catch (err) {
+    document.getElementById('modal-title').textContent = 'Connection Issue';
+    showScreen('service-error-screen');
+    return;
+  }
 
-    if (isFraud) {
-      triggerFraudAlert(key, from, to, amount);
-    } else {
-      // Successful transfer — just close for now
-      closeModal();
-    }
-  }, 1800);
+  if (result.blocked) {
+    triggerFraudAlert(result);
+  } else {
+    closeModal();
+  }
 }
 
-function triggerFraudAlert(key, from, to, amount) {
-  const reason = FRAUD_REASONS[key] || DEFAULT_FRAUD;
-  const ref    = 'FRD-2024-' + String(Math.floor(Math.random() * 90000) + 10000);
+function triggerFraudAlert(result) {
+  const ref = 'FRD-2024-' + String(Math.floor(Math.random() * 90000) + 10000);
+  lastTransfer = { patternId: result.patternId, from: result.from, to: result.to };
 
   document.getElementById('modal-title').textContent = 'Transfer Blocked';
-  document.getElementById('fraud-subtitle').textContent = reason.subtitle;
-  document.getElementById('fraud-body').textContent     = reason.body;
+  document.getElementById('fraud-subtitle').textContent = result.subtitle;
+  document.getElementById('fraud-body').textContent     = result.body;
   document.getElementById('fraud-ref').textContent      = `REF: ${ref}`;
 
   showScreen('fraud-screen');
@@ -1020,7 +1024,14 @@ function triggerFraudAlert(key, from, to, amount) {
 
 function openInvestigation() {
   closeModal();
-  window.open('index.html', '_blank');
+  const params = new URLSearchParams();
+  if (lastTransfer?.patternId) {
+    params.set('pattern', lastTransfer.patternId);
+    params.set('from', lastTransfer.from);
+    params.set('to', lastTransfer.to);
+  }
+  const qs = params.toString();
+  window.open(qs ? `index.html?${qs}` : 'index.html', '_blank');
 }
 
 // ── Boot ──────────────────────────────────────────────────────
